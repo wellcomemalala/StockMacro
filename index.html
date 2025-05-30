@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบสต๊อคแมคโคร - ร้านอาหารแวะถัวะ</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <!-- เพิ่มก่อนส่วน Firebase -->
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Sarabun', sans-serif;
+    }
+
+    body {
+      background-color: #f5f5f5;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      background-color: #4CAF50;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+    }
+
+    .card {
+      background-color: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    button.delete {
+      background-color: #f44336;
+    }
+
+    button.delete:hover {
+      background-color: #d32f2f;
+    }
+
+    button.edit {
+      background-color: #2196F3;
+    }
+
+    button.edit:hover {
+      background-color: #0b7dda;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #f2f2f2;
+      font-weight: 600;
+    }
+
+    tr:hover {
+      background-color: #f9f9f9;
+    }
+
+    .status-low {
+      color: #ffffff;
+      font-weight: 500;
+      background-color: #f44336;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .status-warning {
+      color: #000000;
+      font-weight: 500;
+      background-color: #FFC107;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .status-normal {
+      color: #ffffff;
+      font-weight: 500;
+      background-color: #4CAF50;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    tr.warning-row {
+      background-color: rgba(255, 193, 7, 0.1);
+    }
+
+    tr.danger-row {
+      background-color: rgba(244, 67, 54, 0.1);
+    }
+
+    .search-bar {
+      margin-bottom: 20px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+
+    .tab-container {
+      display: flex;
+      margin-bottom: 20px;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      background-color: #ddd;
+      cursor: pointer;
+      border-radius: 4px 4px 0 0;
+      margin-right: 5px;
+    }
+
+    .tab.active {
+      background-color: white;
+      border-top: 2px solid #4CAF50;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+      font-size: 18px;
+      color: #666;
+    }
+
+    .staff-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 15px 0;
+    }
+
+    .staff-btn {
+      padding: 8px 15px;
+      background-color: #e0e0e0;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .staff-btn.selected {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .history-item {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .history-date {
+      font-weight: bold;
+      margin-top: 20px;
+      padding-bottom: 5px;
+      border-bottom: 2px solid #4CAF50;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.7);
+    }
+
+    .modal-content {
+      background-color: white;
+      margin: 15% auto;
+      padding: 20px;
+      border-radius: 8px;
+      width: 300px;
+      text-align: center;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 10px;
+      }
+      
+      h1 {
+        font-size: 1.5rem;
+      }
+      
+      .button-group {
+        flex-direction: column;
+      }
+      
+      th, td {
+        padding: 8px;
+        font-size: 14px;
+      }
+
+      .staff-buttons {
+        flex-direction: column;
+      }
+    }
+	
+	/* เพิ่มในส่วน style */
+button i.fas {
+  margin-right: 5px;
+}
+
+/* เพิ่ม media query สำหรับมือถือ */
+@media (max-width: 768px) {
+  .search-bar button {
+    width: 100%;
+    padding: 12px;
+  }
+}
+
+/* เพิ่มในส่วน style */
+.search-bar button {
+  white-space: nowrap;
+}
+
+.search-bar button i {
+  margin-right: 5px;
+}
+
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>ระบบสต๊อคแมคโคร - ร้านอาหารแวะถัวะ</h1>
+      <p id="currentDate"></p>
+    </header>
+
+    <div class="tab-container">
+      <div class="tab active" data-tab="stock">รายการสต๊อค</div>
+      <div class="tab" data-tab="add">เพิ่มสินค้า</div>
+      <div class="tab" data-tab="history">ประวัติการอัพเดท</div>
+    </div>
+
+    <div id="stockTab" class="tab-content card active">
+      <div class="search-bar">
+  <input type="text" id="searchInput" class="search-input" placeholder="ค้นหาสินค้า...">
+  <div style="display: flex; gap: 10px; margin-top: 10px;">
+    <button onclick="exportToImage()">
+      <i class="fas fa-download"></i> Export เป็นรูปภาพ
+    </button>
+    <button onclick="backupData()">
+      <i class="fas fa-database"></i> สำรองข้อมูล
+    </button>
+    <button onclick="document.getElementById('restoreFile').click()">
+      <i class="fas fa-upload"></i> กู้คืนข้อมูล
+    </button>
+    <input type="file" id="restoreFile" accept=".json" style="display: none;">
+  </div>
+</div>
+      
+      <div id="stockList">
+        <div class="loading">กำลังโหลดข้อมูล...</div>
+      </div>
+    </div>
+
+    <div id="addTab" class="tab-content card">
+      <h2>เพิ่มรายการสินค้า</h2>
+      <form id="addItemForm">
+        <div class="form-group">
+          <label for="itemName">ชื่อสินค้า</label>
+          <input type="text" id="itemName" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="itemQuantity">จำนวน</label>
+          <input type="number" id="itemQuantity" min="0" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="itemUnit">หน่วย</label>
+          <input type="text" id="itemUnit" placeholder="เช่น ขวด, กล่อง, ถุง" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="minQuantity">จำนวนขั้นต่ำที่ควรมี</label>
+          <input type="number" id="minQuantity" min="0" required>
+        </div>
+
+        <div class="form-group">
+          <label>ชื่อพนักงาน (กรุณาเลือกชื่อพนักงานที่อัพเดทสินค้านี้)</label>
+          <div class="staff-buttons">
+            <button type="button" class="staff-btn" data-staff="เนย">เนย</button>
+            <button type="button" class="staff-btn" data-staff="เพลง">เพลง</button>
+            <button type="button" class="staff-btn" data-staff="ซี">ซี</button>
+            <button type="button" class="staff-btn" data-staff="เจี๊ยบ">เจี๊ยบ</button>
+            <button type="button" class="staff-btn" data-staff="แนน">แนน</button>
+            <button type="button" class="staff-btn" data-staff="เมย์">เมย์</button>
+            <button type="button" class="staff-btn" data-staff="กีต้า">กีต้า</button>
+            <button type="button" class="staff-btn" data-staff="กิ๊ก">กิ๊ก</button>
+          </div>
+          <input type="hidden" id="selectedStaff" required>
+        </div>
+
+        <input type="hidden" id="editItemId">
+        <button type="submit" id="submitBtn">เพิ่มสินค้า</button>
+        <button type="button" id="cancelBtn" style="display:none; background-color:#ccc;">ยกเลิก</button>
+      </form>
+    </div>
+
+    <div id="historyTab" class="tab-content card">
+      <h2>ประวัติการอัพเดทสินค้า</h2>
+      <div id="historyList">
+        <div class="loading">กำลังโหลดข้อมูล...</div>
+      </div>
+      <button id="clearHistoryBtn" class="delete">ลบประวัติทั้งหมด</button>
+    </div>
+  </div>
+
+  <!-- Delete History Modal -->
+  <div id="deleteHistoryModal" class="modal">
+    <div class="modal-content">
+      <h3>ยืนยันการลบประวัติ</h3>
+      <p>กรุณาใส่รหัสเพื่อลบประวัติ</p>
+      <div class="form-group">
+        <input type="password" id="deletePasswordInput" placeholder="ใส่รหัสผ่าน">
+      </div>
+      <div class="button-group">
+        <button id="confirmDeleteHistory">ยืนยัน</button>
+        <button id="cancelDeleteHistory" style="background-color:#ccc;">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.15.0/firebase-app-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.15.0/firebase-database-compat.js"></script>
+  
+  <script>
+  
+  
+  
+  // เพิ่มฟังก์ชันนี้ในส่วน script
+window.backupData = function() {
+  stockRef.once('value').then((snapshot) => {
+    const data = snapshot.val();
+    if (!data) {
+      showNotification('ไม่มีข้อมูลให้สำรอง', 'error');
+      return;
+    }
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `stock-backup-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showNotification('สำรองข้อมูลสำเร็จ');
+  }).catch((error) => {
+    showNotification('สำรองข้อมูลไม่สำเร็จ', 'error');
+    console.error('Backup error:', error);
+  });
+};
+
+
+  
+  // เพิ่มฟังก์ชันนี้ก่อนส่วน Firebase configuration
+window.exportToImage = function() {
+  const stockTable = document.querySelector('#stockList table');
+
+  html2canvas(stockTable, {
+    scrollY: -window.scrollY, // จัดการการสกรอล
+    allowTaint: true,
+    useCORS: true,
+    logging: true,
+    windowHeight: stockTable.scrollHeight
+  }).then(canvas => {
+    const link = document.createElement('a');
+    link.download = 'stock-report-' + new Date().toISOString() + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    showNotification('ส่งออกรูปภาพสำเร็จ');
+  }).catch(error => {
+    console.error('Error exporting:', error);
+    showNotification('ส่งออกรูปภาพไม่สำเร็จ', 'error');
+  });
+};
+  function updateQuantity(itemId, currentQty, isIncrement) {
+  // สร้าง modal สำหรับเลือกจำนวนและพนักงาน
+  const quantityModal = document.createElement('div');
+  quantityModal.className = 'modal';
+  quantityModal.style.display = 'block';
+  
+  // สร้างเนื้อหาใน modal
+  const modalContent = document.createElement('div');
+  modalContent.className = 'modal-content';
+  modalContent.style.width = '350px';
+  
+  // สร้างหัวข้อ
+  const modalTitle = document.createElement('h3');
+  modalTitle.textContent = isIncrement ? 'เพิ่มจำนวนสินค้า' : 'ลดจำนวนสินค้า';
+  
+  // สร้างส่วนเลือกจำนวน
+  const quantitySection = document.createElement('div');
+  quantitySection.style.margin = '15px 0';
+  
+  const quantityLabel = document.createElement('label');
+  quantityLabel.textContent = 'เลือกจำนวน:';
+  quantityLabel.style.display = 'block';
+  quantityLabel.style.marginBottom = '5px';
+  quantityLabel.style.fontWeight = '500';
+  
+  const quantityButtonsDiv = document.createElement('div');
+  quantityButtonsDiv.style.display = 'flex';
+  quantityButtonsDiv.style.gap = '10px';
+  quantityButtonsDiv.style.marginBottom = '15px';
+  
+  // สร้างปุ่มเลือกจำนวน 1-5
+  const quantities = [1, 2, 3, 4, 5];
+  let selectedQuantity = 1; // ค่าเริ่มต้น
+  
+  quantities.forEach(qty => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = qty.toString();
+    button.style.padding = '8px 12px';
+    button.style.backgroundColor = qty === 1 ? '#4CAF50' : '#e0e0e0';
+    button.style.color = qty === 1 ? 'white' : 'black';
+    button.style.border = 'none';
+    button.style.borderRadius = '4px';
+    button.style.cursor = 'pointer';
+    button.style.width = '40px';
+    
+    button.addEventListener('click', () => {
+      // รีเซ็ตสีของปุ่มทั้งหมด
+      quantityButtonsDiv.querySelectorAll('button').forEach(btn => {
+        btn.style.backgroundColor = '#e0e0e0';
+        btn.style.color = 'black';
+      });
+      
+      // ไฮไลท์ปุ่มที่เลือก
+      button.style.backgroundColor = '#4CAF50';
+      button.style.color = 'white';
+      
+      selectedQuantity = qty;
+    });
+    
+    quantityButtonsDiv.appendChild(button);
+  });
+  
+  // เพิ่มช่องกรอกจำนวนเอง
+  const customQuantityDiv = document.createElement('div');
+  customQuantityDiv.style.marginBottom = '15px';
+  
+  const customQuantityLabel = document.createElement('label');
+  customQuantityLabel.textContent = 'หรือใส่จำนวนเอง:';
+  customQuantityLabel.style.display = 'block';
+  customQuantityLabel.style.marginBottom = '5px';
+  customQuantityLabel.style.fontWeight = '500';
+  
+  const customQuantityInput = document.createElement('input');
+  customQuantityInput.type = 'number';
+  customQuantityInput.min = '1';
+  customQuantityInput.placeholder = 'จำนวนที่ต้องการ';
+  customQuantityInput.style.width = '100%';
+  customQuantityInput.style.padding = '10px';
+  customQuantityInput.style.border = '1px solid #ddd';
+  customQuantityInput.style.borderRadius = '4px';
+  customQuantityInput.style.fontSize = '16px';
+  
+  customQuantityInput.addEventListener('input', () => {
+    if (customQuantityInput.value) {
+      // รีเซ็ตปุ่มเลือกจำนวน
+      quantityButtonsDiv.querySelectorAll('button').forEach(btn => {
+        btn.style.backgroundColor = '#e0e0e0';
+        btn.style.color = 'black';
+      });
+      
+      selectedQuantity = parseInt(customQuantityInput.value) || 1;
+    }
+  });
+  
+  customQuantityDiv.appendChild(customQuantityLabel);
+  customQuantityDiv.appendChild(customQuantityInput);
+  
+  // สร้างหัวข้อเลือกพนักงาน
+  const staffSectionTitle = document.createElement('h4');
+  staffSectionTitle.textContent = 'เลือกชื่อพนักงาน';
+  staffSectionTitle.style.marginTop = '20px';
+  staffSectionTitle.style.marginBottom = '10px';
+  
+  // สร้างปุ่มสำหรับพนักงานแต่ละคน
+  const staffNames = ['เนย', 'เพลง', 'ซี', 'เจี๊ยบ', 'แนน', 'เมย์', 'กีต้า', 'กิ๊ก'];
+  const staffButtonsDiv = document.createElement('div');
+  staffButtonsDiv.className = 'staff-buttons';
+  staffButtonsDiv.style.display = 'flex';
+  staffButtonsDiv.style.flexWrap = 'wrap';
+  staffButtonsDiv.style.gap = '10px';
+  staffButtonsDiv.style.margin = '15px 0';
+  
+  let selectedStaff = null;
+  
+  staffNames.forEach(name => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'staff-btn';
+    button.textContent = name;
+    button.style.padding = '8px 15px';
+    button.style.backgroundColor = '#e0e0e0';
+    button.style.border = 'none';
+    button.style.borderRadius = '4px';
+    button.style.cursor = 'pointer';
+    
+    button.addEventListener('click', () => {
+      // รีเซ็ตสีของปุ่มพนักงานทั้งหมด
+      staffButtonsDiv.querySelectorAll('button').forEach(btn => {
+        btn.style.backgroundColor = '#e0e0e0';
+        btn.style.color = 'black';
+      });
+      
+      // ไฮไลท์ปุ่มพนักงานที่เลือก
+      button.style.backgroundColor = '#4CAF50';
+      button.style.color = 'white';
+      
+      selectedStaff = name;
+    });
+    
+    staffButtonsDiv.appendChild(button);
+  });
+  
+  // สร้างปุ่มยืนยันและยกเลิก
+  const buttonGroup = document.createElement('div');
+  buttonGroup.style.display = 'flex';
+  buttonGroup.style.gap = '10px';
+  buttonGroup.style.marginTop = '20px';
+  
+  // ปุ่มยืนยัน
+  const confirmButton = document.createElement('button');
+  confirmButton.textContent = 'ยืนยัน';
+  confirmButton.style.backgroundColor = '#4CAF50';
+  confirmButton.style.color = 'white';
+  confirmButton.style.border = 'none';
+  confirmButton.style.padding = '10px 15px';
+  confirmButton.style.borderRadius = '4px';
+  confirmButton.style.cursor = 'pointer';
+  confirmButton.style.flex = '1';
+  
+  confirmButton.addEventListener('click', () => {
+    if (!selectedStaff) {
+      showNotification("กรุณาเลือกชื่อพนักงาน", "error");
+      return;
+    }
+    
+    // คำนวณจำนวนใหม่
+    let newQty;
+    if (isIncrement) {
+      newQty = currentQty + selectedQuantity;
+    } else {
+      newQty = currentQty - selectedQuantity;
+      if (newQty < 0) newQty = 0; // ป้องกันจำนวนติดลบ
+    }
+    
+    // ลบ modal
+    document.body.removeChild(quantityModal);
+    
+    // ดำเนินการอัพเดทข้อมูล
+    const itemRef = database.ref('stock/' + itemId);
+
+    itemRef.once('value', (snapshot) => {
+      const item = snapshot.val();
+      if (!item) return;
+
+      const oldQty = item.quantity;
+      const updatedData = {
+        quantity: newQty,
+        lastUpdated: new Date().toISOString(),
+        updatedBy: selectedStaff
+      };
+
+      itemRef.update(updatedData).then(() => {
+        // เพิ่มประวัติ
+        historyRef.push({
+          type: 'update',
+          itemName: item.name,
+          oldQuantity: oldQty,
+          newQuantity: newQty,
+          unit: item.unit,
+          updatedBy: selectedStaff,
+          timestamp: new Date().toISOString(),
+          date: new Date().toLocaleDateString('th-TH')
+        });
+
+        document.getElementById(`qty-${itemId}`).textContent = newQty;
+        showNotification("อัปเดทจำนวนสำเร็จ");
+      }).catch((error) => {
+        showNotification("เกิดข้อผิดพลาด: " + error.message, "error");
+      });
+    });
+  });
+  
+  // ปุ่มยกเลิก
+  const cancelButton = document.createElement('button');
+  cancelButton.textContent = 'ยกเลิก';
+  cancelButton.style.backgroundColor = '#ccc';
+  cancelButton.style.color = 'black';
+  cancelButton.style.border = 'none';
+  cancelButton.style.padding = '10px 15px';
+  cancelButton.style.borderRadius = '4px';
+  cancelButton.style.cursor = 'pointer';
+  cancelButton.style.flex = '1';
+  
+  cancelButton.addEventListener('click', () => {
+    document.body.removeChild(quantityModal);
+  });
+  
+  buttonGroup.appendChild(confirmButton);
+  buttonGroup.appendChild(cancelButton);
+  
+  // เพิ่มองค์ประกอบเข้าไปใน modal
+  modalContent.appendChild(modalTitle);
+  quantitySection.appendChild(quantityLabel);
+  quantitySection.appendChild(quantityButtonsDiv);
+  modalContent.appendChild(quantitySection);
+  modalContent.appendChild(customQuantityDiv);
+  modalContent.appendChild(staffSectionTitle);
+  modalContent.appendChild(staffButtonsDiv);
+  modalContent.appendChild(buttonGroup);
+  quantityModal.appendChild(modalContent);
+  
+  // เพิ่ม modal เข้าไปในหน้าเว็บ
+  document.body.appendChild(quantityModal);
+  
+  // ปิด modal เมื่อคลิกนอกกรอบ
+  quantityModal.addEventListener('click', (event) => {
+    if (event.target === quantityModal) {
+      document.body.removeChild(quantityModal);
+    }
+  });
+}
+
+
+  // Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyDto-vYbdoDCur6fX-6i0NtUwKjTmsD6w8",
+  authDomain: "project-7108881158773558151.firebaseapp.com",
+  databaseURL: "https://project-7108881158773558151-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "project-7108881158773558151",
+  storageBucket: "project-7108881158773558151.firebasestorage.app",
+  messagingSenderId: "228955526737",
+  appId: "1:228955526737:web:d26bddf640f4fcadc08a70"
+};
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const stockRef = database.ref('stock');
+    const historyRef = database.ref('history');
+
+    // Display current date
+    const today = new Date();
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('currentDate').textContent = today.toLocaleDateString('th-TH', options);
+
+    // Tab functionality
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        document.querySelectorAll('.tab-content').forEach(content => {
+          content.classList.remove('active');
+        });
+        
+        const tabId = tab.getAttribute('data-tab');
+        document.getElementById(tabId + 'Tab').classList.add('active');
+      });
+    });
+
+    // Staff selection functionality
+    const staffButtons = document.querySelectorAll('.staff-btn');
+    staffButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        staffButtons.forEach(btn => btn.classList.remove('selected'));
+        button.classList.add('selected');
+        document.getElementById('selectedStaff').value = button.getAttribute('data-staff');
+      });
+    });
+
+    // Form submission
+    const addItemForm = document.getElementById('addItemForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const editItemId = document.getElementById('editItemId');
+
+    addItemForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const itemName = document.getElementById('itemName').value;
+      const itemQuantity = parseInt(document.getElementById('itemQuantity').value);
+      const itemUnit = document.getElementById('itemUnit').value;
+      const minQuantity = parseInt(document.getElementById('minQuantity').value);
+      const staffName = document.getElementById('selectedStaff').value;
+      
+      if (!staffName) {
+        showNotification('กรุณาเลือกชื่อพนักงาน', 'error');
+        return;
+      }
+      
+      const timestamp = new Date().toISOString();
+      const itemData = {
+        name: itemName,
+        quantity: itemQuantity,
+        unit: itemUnit,
+        minQuantity: minQuantity,
+        lastUpdated: timestamp,
+        updatedBy: staffName
+      };
+      
+      if (editItemId.value) {
+        // Get old data for history
+        database.ref('stock/' + editItemId.value).once('value', (snapshot) => {
+          const oldItem = snapshot.val();
+          
+          // Update existing item
+          database.ref('stock/' + editItemId.value).update(itemData)
+            .then(() => {
+              // Add to history
+              const historyData = {
+                type: 'update',
+                itemName: itemName,
+                oldQuantity: oldItem.quantity,
+                newQuantity: itemQuantity,
+                unit: itemUnit,
+                updatedBy: staffName,
+                timestamp: timestamp,
+                date: new Date().toLocaleDateString('th-TH')
+              };
+              
+              historyRef.push(historyData);
+              
+              addItemForm.reset();
+              editItemId.value = '';
+              submitBtn.textContent = 'เพิ่มสินค้า';
+              cancelBtn.style.display = 'none';
+              document.querySelector('[data-tab="stock"]').click();
+              
+              // Reset staff selection
+              staffButtons.forEach(btn => btn.classList.remove('selected'));
+              document.getElementById('selectedStaff').value = '';
+              
+              showNotification('อัพเดทสินค้าสำเร็จ');
+            })
+            .catch(error => {
+              console.error('Error updating item:', error);
+              showNotification('เกิดข้อผิดพลาด: ' + error.message, 'error');
+            });
+        });
+      } else {
+        // Add new item
+        stockRef.push(itemData)
+          .then(() => {
+            // Add to history
+            const historyData = {
+              type: 'add',
+              itemName: itemName,
+              quantity: itemQuantity,
+              unit: itemUnit,
+              addedBy: staffName,
+              timestamp: timestamp,
+              date: new Date().toLocaleDateString('th-TH')
+            };
+            
+            historyRef.push(historyData);
+            
+            addItemForm.reset();
+            document.querySelector('[data-tab="stock"]').click();
+            
+            // Reset staff selection
+            staffButtons.forEach(btn => btn.classList.remove('selected'));
+            document.getElementById('selectedStaff').value = '';
+            
+            showNotification('เพิ่มสินค้าสำเร็จ');
+          })
+          .catch(error => {
+            console.error('Error adding item:', error);
+            showNotification('เกิดข้อผิดพลาด: ' + error.message, 'error');
+          });
+      }
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      addItemForm.reset();
+      editItemId.value = '';
+      submitBtn.textContent = 'เพิ่มสินค้า';
+      cancelBtn.style.display = 'none';
+      
+      // Reset staff selection
+      staffButtons.forEach(btn => btn.classList.remove('selected'));
+      document.getElementById('selectedStaff').value = '';
+    });
+
+    // Load stock items
+    function loadStockItems() {
+      stockRef.on('value', (snapshot) => {
+        const stockList = document.getElementById('stockList');
+        if (!snapshot.exists()) {
+          stockList.innerHTML = '<p>ไม่พบรายการสินค้าในสต๊อค</p>';
+          return;
+        }
+        
+        const items = snapshot.val();
+        let tableHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>ลำดับ</th>
+                <th>รายการ</th>
+                <th>จำนวน</th>
+                <th>หน่วย</th>
+                <th>สถานะ</th>
+                <th>อัพเดทล่าสุด</th>
+                <th>อัพเดทโดย</th>
+                <th>จัดการ</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        
+        // ในฟังก์ชัน loadStockItems() ให้แก้ไขส่วนที่สร้าง HTML ของตาราง
+let index = 1;
+for (const key in items) {
+  const item = items[key];
+  
+  // กำหนดสถานะและสีแถว
+  let status, rowClass = '';
+  
+  if (item.quantity <= 0) {
+    status = `<span class="status-low">หมด</span>`;
+    rowClass = 'danger-row';
+  } else if (item.quantity < item.minQuantity) {
+    status = `<span class="status-warning">ใกล้หมด</span>`;
+    rowClass = 'warning-row';
+  } else if (item.quantity === item.minQuantity) {
+    status = `<span class="status-warning">ใกล้หมด</span>`;
+    rowClass = 'warning-row';
+  } else {
+    status = `<span class="status-normal">ปกติ</span>`;
+  }
+  
+  const date = new Date(item.lastUpdated);
+  const formattedDate = date.toLocaleDateString('th-TH') + ' ' + 
+                       date.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
+  
+  const updatedBy = item.updatedBy || '-';
+  
+  tableHTML += `
+    <tr class="${rowClass}">
+      <td>${index}</td>
+      <td>${item.name}</td>
+      <td>
+        <button onclick="updateQuantity('${key}', ${item.quantity}, false)">-</button>
+        <span id="qty-${key}">${item.quantity}</span>
+        <button onclick="updateQuantity('${key}', ${item.quantity}, true)">+</button>
+      </td>
+      <td>${item.unit}</td>
+      <td>${status}</td>
+      <td>${formattedDate}</td>
+      <td>${updatedBy}</td>
+      <td>
+        <div class="button-group">
+          <button class="edit" onclick="editItem('${key}')">
+            <i class="fas fa-edit"></i> แก้ไข
+          </button>
+          <button class="delete" onclick="deleteItem('${key}', '${item.name}')">
+            <i class="fas fa-trash"></i> ลบ
+          </button>
+        </div>
+      </td>
+    </tr>
+  `;
+  index++;
+}
+        
+        tableHTML += `
+            </tbody>
+          </table>
+        `;
+        
+        stockList.innerHTML = tableHTML;
+      });
+    }
+
+    // Load history items
+    function loadHistoryItems() {
+      historyRef.orderByChild('timestamp').on('value', (snapshot) => {
+        const historyList = document.getElementById('historyList');
+        if (!snapshot.exists()) {
+          historyList.innerHTML = '<p>ไม่พบประวัติการอัพเดท</p>';
+          return;
+        }
+        
+        const histories = [];
+        snapshot.forEach(childSnapshot => {
+          histories.push({
+            key: childSnapshot.key,
+            ...childSnapshot.val()
+          });
+        });
+        
+        // Sort by timestamp (newest first)
+        histories.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        
+        // Group by date
+        const groupedByDate = {};
+        histories.forEach(history => {
+          const date = history.date || new Date(history.timestamp).toLocaleDateString('th-TH');
+          if (!groupedByDate[date]) {
+            groupedByDate[date] = [];
+          }
+          groupedByDate[date].push(history);
+        });
+        
+        let historyHTML = '';
+        
+        for (const date in groupedByDate) {
+          historyHTML += `<div class="history-date">${date}</div>`;
+          
+          groupedByDate[date].forEach(history => {
+            const time = new Date(history.timestamp).toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
+            
+            if (history.type === 'add') {
+              historyHTML += `
+                <div class="history-item">
+                  <p>${time} - <strong>${history.addedBy}</strong> เพิ่มสินค้า <strong>${history.itemName}</strong> จำนวน ${history.quantity} ${history.unit}</p>
+                </div>
+              `;
+            } else if (history.type === 'update') {
+              historyHTML += `
+                <div class="history-item">
+                  <p>${time} - <strong>${history.updatedBy}</strong> อัพเดทสินค้า <strong>${history.itemName}</strong> จาก ${history.oldQuantity} ${history.unit} เป็น ${history.newQuantity} ${history.unit}</p>
+                </div>
+              `;
+            } else if (history.type === 'delete') {
+              historyHTML += `
+                <div class="history-item">
+                  <p>${time} - <strong>${history.deletedBy}</strong> ลบสินค้า <strong>${history.itemName}</strong> จำนวน ${history.quantity} ${history.unit}</p>
+                </div>
+              `;
+            }
+          });
+        }
+        
+        historyList.innerHTML = historyHTML;
+      });
+    }
+
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+      const searchValue = this.value.toLowerCase();
+      const rows = document.querySelectorAll('#stockList table tbody tr');
+      
+      rows.forEach(row => {
+        const itemName = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+        if (itemName.includes(searchValue)) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    });
+
+    // Edit item
+    window.editItem = function(itemId) {
+      database.ref('stock/' + itemId).once('value', (snapshot) => {
+        const item = snapshot.val();
+        
+        document.getElementById('itemName').value = item.name;
+        document.getElementById('itemQuantity').value = item.quantity;
+        document.getElementById('itemUnit').value = item.unit;
+        document.getElementById('minQuantity').value = item.minQuantity;
+        document.getElementById('editItemId').value = itemId;
+        
+        document.getElementById('submitBtn').textContent = 'อัพเดทสินค้า';
+        document.getElementById('cancelBtn').style.display = 'inline-block';
+        
+        // Reset staff selection
+        staffButtons.forEach(btn => btn.classList.remove('selected'));
+        document.getElementById('selectedStaff').value = '';
+        
+        document.querySelector('[data-tab="add"]').click();
+      });
+    };
+
+    // Delete item
+    window.deleteItem = function(itemId, itemName) {
+      if (confirm(`ต้องการลบ "${itemName}" ออกจากสต๊อคใช่หรือไม่?`)) {
+        // Get staff name first
+        const staffName = prompt("กรุณาใส่ชื่อพนักงานที่ลบสินค้านี้:");
+        
+        if (!staffName) {
+          showNotification("กรุณาระบุชื่อพนักงาน", "error");
+          return;
+        }
+        
+        // Get item data for history
+        database.ref('stock/' + itemId).once('value', (snapshot) => {
+          const item = snapshot.val();
+          
+          database.ref('stock/' + itemId).remove()
+            .then(() => {
+              // Add to history
+              const historyData = {
+                type: 'delete',
+                itemName: itemName,
+                quantity: item.quantity,
+                unit: item.unit,
+                deletedBy: staffName,
+                timestamp: new Date().toISOString(),
+                date: new Date().toLocaleDateString('th-TH')
+              };
+              
+              historyRef.push(historyData);
+              
+              showNotification(`ลบ "${itemName}" สำเร็จ`);
+            })
+            .catch(error => {
+              console.error('Error deleting item:', error);
+              showNotification('เกิดข้อผิดพลาด: ' + error.message, 'error');
+            });
+        });
+      }
+    };
+
+    // Delete history functionality
+    const deleteHistoryModal = document.getElementById('deleteHistoryModal');
+    const deleteHistoryBtn = document.getElementById('clearHistoryBtn');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteHistory');
+    const cancelDeleteBtn = document.getElementById('cancelDeleteHistory');
+    const deletePasswordInput = document.getElementById('deletePasswordInput');
+    
+    deleteHistoryBtn.addEventListener('click', () => {
+      deleteHistoryModal.style.display = 'block';
+    });
+    
+    cancelDeleteBtn.addEventListener('click', () => {
+      deleteHistoryModal.style.display = 'none';
+      deletePasswordInput.value = '';
+    });
+    
+    confirmDeleteBtn.addEventListener('click', () => {
+      const password = deletePasswordInput.value;
+      
+      if (password === '202429') {
+        historyRef.remove()
+          .then(() => {
+            deleteHistoryModal.style.display = 'none';
+            deletePasswordInput.value = '';
+            showNotification('ลบประวัติทั้งหมดสำเร็จ');
+          })
+          .catch(error => {
+            console.error('Error deleting history:', error);
+            showNotification('เกิดข้อผิดพลาด: ' + error.message, 'error');
+          });
+      } else {
+        showNotification('รหัสผ่านไม่ถูกต้อง', 'error');
+      }
+    });
+
+    // Modal close on outside click
+    window.onclick = function(event) {
+      if (event.target === deleteHistoryModal) {
+        deleteHistoryModal.style.display = 'none';
+        deletePasswordInput.value = '';
+      }
+    };
+
+    // Notification system
+    function showNotification(message, type = 'success') {
+      const notification = document.createElement('div');
+      notification.textContent = message;
+      notification.style.position = 'fixed';
+      notification.style.bottom = '20px';
+      notification.style.right = '20px';
+      notification.style.padding = '10px 20px';
+      notification.style.borderRadius = '4px';
+      notification.style.color = 'white';
+      notification.style.zIndex = '1000';
+      
+      if (type === 'success') {
+        notification.style.backgroundColor = '#4CAF50';
+      } else {
+        notification.style.backgroundColor = '#f44336';
+      }
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transition = 'opacity 0.5s';
+        setTimeout(() => {
+          document.body.removeChild(notification);
+        }, 500);
+      }, 3000);
+    }
+
+
+// เพิ่มส่วนนี้ก่อน initApp()
+document.getElementById('restoreFile').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!confirm('⚠️ คุณแน่ใจต้องการกู้คืนข้อมูลทั้งหมด?\nข้อมูลปัจจุบันจะถูกแทนที่!')) return;
+
+      // ลบข้อมูลเดิมทั้งหมด
+      stockRef.remove().then(() => {
+        // อัพโหลดข้อมูลใหม่
+        const updates = {};
+        Object.keys(data).forEach(key => {
+          updates[`/stock/${key}`] = data[key];
+        });
+
+        database.ref().update(updates).then(() => {
+          showNotification('กู้คืนข้อมูลสำเร็จ');
+          loadStockItems();
+        }).catch((error) => {
+          showNotification('กู้คืนข้อมูลไม่สำเร็จ', 'error');
+          console.error('Restore error:', error);
+        });
+      });
+    } catch (error) {
+      showNotification('รูปแบบไฟล์ไม่ถูกต้อง', 'error');
+      console.error('JSON parse error:', error);
+    }
+    e.target.value = ''; // รีเซ็ตค่า input
+  };
+  reader.readAsText(file);
+});
+
+
+    // Initialize app
+    function initApp() {
+      loadStockItems();
+      loadHistoryItems();
+      
+      // Add default items if stock is empty
+      stockRef.once('value', (snapshot) => {
+        if (!snapshot.exists()) {
+          const defaultItems = [
+            {name: 'ชูรส พลัส', quantity: 5, unit: 'ขวด', minQuantity: 2, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+            {name: 'แป้งข้าวโพด', quantity: 3, unit: 'ถุง', minQuantity: 1, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+            {name: 'ซีอิ๊วดำ', quantity: 4, unit: 'ขวด', minQuantity: 2, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+            {name: 'น้ำปลา', quantity: 6, unit: 'ขวด', minQuantity: 3, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+            {name: 'ซอสมะเขือเทศ', quantity: 4, unit: 'ขวด', minQuantity: 2, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+            {name: 'ซอสภูเขาทอง', quantity: 2, unit: 'ขวด', minQuantity: 1, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+            {name: 'น้ำส้ม อสร', quantity: 5, unit: 'ขวด', minQuantity: 2, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+            {name: 'น้ำมัน', quantity: 10, unit: 'ขวด', minQuantity: 4, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+            {name: 'ทิชชู่', quantity: 20, unit: 'ม้วน', minQuantity: 5, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+            {name: 'กระดาษซับมัน', quantity: 3, unit: 'ม้วน', minQuantity: 1, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+            {name: 'ฟองน้ำ', quantity: 8, unit: 'ชิ้น', minQuantity: 3, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+            {name: 'ฝอยขัดหม้อ', quantity: 6, unit: 'ชิ้น', minQuantity: 2, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+            {name: 'ผงซักฟอก', quantity: 2, unit: 'ถุง', minQuantity: 1, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+            {name: 'น้ำยาล้างห้องน้ำ', quantity: 3, unit: 'ขวด', minQuantity: 1, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+            {name: 'น้ำยาล้างจาน', quantity: 4, unit: 'ขวด', minQuantity: 2, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'}
+          ];
+          
+          defaultItems.forEach(item => {
+            stockRef.push(item);
+          });
+        }
+      });
+    }
+
+    // Start the app
+    document.addEventListener('DOMContentLoaded', initApp);
+  </script>
+</body>
+</html>
