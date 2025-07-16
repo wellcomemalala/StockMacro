@@ -717,13 +717,13 @@ window.exportToImage = function() {
 
   // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyAMRFYOKQ5s-apq7aeVRlJTrDpMIgoN5LI",
-  authDomain: "project-1334432856828062315.firebaseapp.com",
-  databaseURL: "https://project-1334432856828062315-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "project-1334432856828062315",
-  storageBucket: "project-1334432856828062315.firebasestorage.app",
-  messagingSenderId: "491251658331",
-  appId: "1:491251658331:web:b542190e23594d109b597e"
+  apiKey: "AIzaSyD-pzUrxmDXdtxq8l6WdB8oRkZj23dncOo",
+  authDomain: "v2-6b470.firebaseapp.com",
+  databaseURL: "https://v2-6b470-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "v2-6b470",
+  storageBucket: "v2-6b470.firebasestorage.app",
+  messagingSenderId: "161585660785",
+  appId: "1:161585660785:web:19c712fde5c63c80e6ecd0"
 };
 
     // Initialize Firebase
@@ -1227,21 +1227,28 @@ document.getElementById('restoreFile').addEventListener('change', function(e) {
       stockRef.once('value', (snapshot) => {
         if (!snapshot.exists()) {
           const defaultItems = [
-            {name: 'ชูรส พลัส', quantity: 5, unit: 'ขวด', minQuantity: 2, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
-            {name: 'แป้งข้าวโพด', quantity: 3, unit: 'ถุง', minQuantity: 1, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
-            {name: 'ซีอิ๊วดำ', quantity: 4, unit: 'ขวด', minQuantity: 2, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
-            {name: 'น้ำปลา', quantity: 6, unit: 'ขวด', minQuantity: 3, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
-            {name: 'ซอสมะเขือเทศ', quantity: 4, unit: 'ขวด', minQuantity: 2, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
-            {name: 'ซอสภูเขาทอง', quantity: 2, unit: 'ขวด', minQuantity: 1, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
-            {name: 'น้ำส้ม อสร', quantity: 5, unit: 'ขวด', minQuantity: 2, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
-            {name: 'น้ำมัน', quantity: 10, unit: 'ขวด', minQuantity: 4, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
-            {name: 'ทิชชู่', quantity: 20, unit: 'ม้วน', minQuantity: 5, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
-            {name: 'กระดาษซับมัน', quantity: 3, unit: 'ม้วน', minQuantity: 1, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
-            {name: 'ฟองน้ำ', quantity: 8, unit: 'ชิ้น', minQuantity: 3, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
-            {name: 'ฝอยขัดหม้อ', quantity: 6, unit: 'ชิ้น', minQuantity: 2, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
-            {name: 'ผงซักฟอก', quantity: 2, unit: 'ถุง', minQuantity: 1, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
-            {name: 'น้ำยาล้างห้องน้ำ', quantity: 3, unit: 'ขวด', minQuantity: 1, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
-            {name: 'น้ำยาล้างจาน', quantity: 4, unit: 'ขวด', minQuantity: 2, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'}
+            {name: 'ชูรส พลัส', quantity: 1, unit: 'ห่อ', minQuantity: 3, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+            {name: 'แป้งข้าวโพด', quantity: 1, unit: 'ถุง', minQuantity: 1, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+            {name: 'ซีอิ๊วดำ', quantity: 1, unit: 'แพค', minQuantity: 1, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+			{name: 'ซอสภูเขาทอง', quantity: 1, unit: 'ขวด', minQuantity: 3, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+            {name: 'น้ำปลาทิพรส', quantity: 1, unit: 'ขวด', minQuantity: 3, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+            {name: 'น้ำปลาเซฟแพค', quantity: 1, unit: 'แกลลอน', minQuantity: 0, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+            {name: 'น้ำส้ม อสร', quantity: 1, unit: 'แกลลอน', minQuantity: 1, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+            {name: 'ทิชชู่', quantity: 1, unit: 'แพค', minQuantity: 1, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+            {name: 'กระดาษซับมัน', quantity: 1, unit: 'ม้วน', minQuantity: 2, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+            {name: 'ฟองน้ำ', quantity: 1, unit: 'ชิ้น', minQuantity: 3, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+            {name: 'ฝอยขัดหม้อ', quantity: 1, unit: 'ชิ้น', minQuantity: 3, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+			{name: 'น้ำยาล้างจาน', quantity: 1, unit: 'ขวด', minQuantity: 2, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+            {name: 'ผงซักฟอก', quantity: 1, unit: 'ถุง', minQuantity: 6, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+            {name: 'น้ำยาล้างห้องน้ำ', quantity: 1, unit: 'ขวด', minQuantity: 1, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+			{name: 'น้ำยาล้างมือ', quantity: 1, unit: 'แกลลอน', minQuantity: 1, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+			{name: 'ที่ฉีดมด', quantity: 1, unit: 'กระป๋อง', minQuantity: 1, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+			{name: 'กาแฟดำ', quantity: 1, unit: 'แพค', minQuantity: 0, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+			{name: 'กาแฟแดง', quantity: 1, unit: 'แพค', minQuantity: 0, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+			{name: 'ซอสมะเขือเทศ', quantity: 1, unit: 'แพค', minQuantity: 0, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+			{name: 'ซอสพริก', quantity: 1, unit: 'แพค', minQuantity: 0, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+            {name: 'แปปซี่', quantity: 1, unit: 'แพค', minQuantity: 0, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
+			{name: 'น้ำมัน', quantity: 1, unit: 'ขวด', minQuantity: 4, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'}
           ];
           
           defaultItems.forEach(item => {
