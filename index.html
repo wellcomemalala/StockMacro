@@ -640,7 +640,7 @@ window.exportToImage = function() {
     document.body.removeChild(quantityModal);
     
     // ดำเนินการอัพเดทข้อมูล
-    const itemRef = database.ref('stock/' + itemId);
+    const itemRef = stockItemRef(itemId);
 
     itemRef.once('value', (snapshot) => {
       const item = snapshot.val();
@@ -730,8 +730,14 @@ const firebaseConfig = {
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
-    const stockRef = database.ref('stock');
-    const historyRef = database.ref('history');
+
+    // ✅ แยกห้องของระบบสต๊อค ไม่ให้ปนกับระบบอื่นใน Firebase โปรเจคเดียวกัน
+    // *** ห้าม!! เขียนโค้ดใดๆ ที่อ้างถึง database.ref() หรือ root ตรงๆ ***
+    const APP_ROOT   = 'stock_macro_v1';
+    const appRootRef = database.ref(APP_ROOT);
+    const stockRef   = appRootRef.child('stock');
+    const historyRef = appRootRef.child('history');
+    const stockItemRef = (id) => appRootRef.child('stock/' + id);
 
     // Display current date
     const today = new Date();
@@ -796,11 +802,11 @@ const firebaseConfig = {
       
       if (editItemId.value) {
         // Get old data for history
-        database.ref('stock/' + editItemId.value).once('value', (snapshot) => {
+        stockItemRef(editItemId.value).once('value', (snapshot) => {
           const oldItem = snapshot.val();
           
           // Update existing item
-          database.ref('stock/' + editItemId.value).update(itemData)
+          stockItemRef(editItemId.value).update(itemData)
             .then(() => {
               // Add to history
               const historyData = {
@@ -1049,7 +1055,7 @@ for (const key in items) {
 
     // Edit item
     window.editItem = function(itemId) {
-      database.ref('stock/' + itemId).once('value', (snapshot) => {
+      stockItemRef(itemId).once('value', (snapshot) => {
         const item = snapshot.val();
         
         document.getElementById('itemName').value = item.name;
@@ -1081,10 +1087,10 @@ for (const key in items) {
         }
         
         // Get item data for history
-        database.ref('stock/' + itemId).once('value', (snapshot) => {
+        stockItemRef(itemId).once('value', (snapshot) => {
           const item = snapshot.val();
           
-          database.ref('stock/' + itemId).remove()
+          stockItemRef(itemId).remove()
             .then(() => {
               // Add to history
               const historyData = {
@@ -1191,23 +1197,40 @@ document.getElementById('restoreFile').addEventListener('change', function(e) {
   reader.onload = (e) => {
     try {
       const data = JSON.parse(e.target.result);
-      if (!confirm('⚠️ คุณแน่ใจต้องการกู้คืนข้อมูลทั้งหมด?\nข้อมูลปัจจุบันจะถูกแทนที่!')) return;
 
-      // ลบข้อมูลเดิมทั้งหมด
-      stockRef.remove().then(() => {
-        // อัพโหลดข้อมูลใหม่
-        const updates = {};
-        Object.keys(data).forEach(key => {
-          updates[`/stock/${key}`] = data[key];
-        });
+      // ✅ FIX: ตรวจโครงสร้างไฟล์ก่อน กันเอาไฟล์ backup ของระบบอื่นมาทับ
+      if (!data || typeof data !== 'object' || Array.isArray(data)) {
+        showNotification('รูปแบบไฟล์ไม่ถูกต้อง', 'error');
+        e.target.value = '';
+        return;
+      }
+      const FOREIGN = ['racing_order_app', 'pos_cashier_v1', 'restaurant_pos_v1', 'stock_macro_v1', 'orders', 'completedOrders'];
+      if (Object.keys(data).some(k => FOREIGN.indexOf(k) !== -1)) {
+        showNotification('ไฟล์นี้เป็น backup ของระบบอื่น — ยกเลิกเพื่อความปลอดภัย', 'error');
+        e.target.value = '';
+        return;
+      }
+      const bad = Object.values(data).find(v => !v || typeof v !== 'object' || typeof v.name !== 'string');
+      if (bad) {
+        showNotification('ไฟล์นี้ไม่ใช่ข้อมูลสต๊อค', 'error');
+        e.target.value = '';
+        return;
+      }
 
-        database.ref().update(updates).then(() => {
-          showNotification('กู้คืนข้อมูลสำเร็จ');
-          loadStockItems();
-        }).catch((error) => {
-          showNotification('กู้คืนข้อมูลไม่สำเร็จ', 'error');
-          console.error('Restore error:', error);
-        });
+      const n = Object.keys(data).length;
+      if (!confirm('⚠️ กู้คืนสต๊อค ' + n + ' รายการ ใช่ไหม?\nสต๊อคปัจจุบันจะถูกแทนที่ทั้งหมด (ประวัตไม่หาย)')) {
+        e.target.value = '';
+        return;
+      }
+
+      // ✅ FIX: เขียนทีเดียวแบบ atomic ที่ stock เท่านั้น
+      // (เดิม remove() ก่อนแล้วค่อยเขียนจาก root → ถ้าเน็ตหลุดกลางคัน ข้อมูลหายเกลี้ยง)
+      stockRef.set(data).then(() => {
+        showNotification('กู้คืนข้อมูลสำเร็จ (' + n + ' รายการ)');
+        loadStockItems();
+      }).catch((error) => {
+        showNotification('กู้คืนไม่สำเร็จ — ข้อมูลเดิมยังอยู่ครบ: ' + error.message, 'error');
+        console.error('Restore error:', error);
       });
     } catch (error) {
       showNotification('รูปแบบไฟล์ไม่ถูกต้อง', 'error');
@@ -1259,8 +1282,42 @@ document.getElementById('restoreFile').addEventListener('change', function(e) {
       });
     }
 
+    // ✅ ย้ายข้อมูลเก่าจาก root (stock, history) → stock_macro_v1/ ให้อัตโนมัติ ทำครั้งเดียว
+    // คัดลอกเหมือนเดิม (copy) ไม่ลบของเก่าทิ้ง — ถ้าพลาดยังกู้ได้เสมอ
+    function migrateLegacyRoot() {
+      return appRootRef.child('_migratedAt').once('value').then(m => {
+        if (m.exists()) return false;
+        return Promise.all([
+          database.ref('stock').once('value'),
+          database.ref('history').once('value')
+        ]).then(([oldStock, oldHistory]) => {
+          if (!oldStock.exists() && !oldHistory.exists()) return false;
+          return Promise.all([
+            stockRef.once('value'),
+            historyRef.once('value')
+          ]).then(([newStock, newHistory]) => {
+            const payload = {};
+            // ย้ายเฉพาะห้องใหม่ที่ยังว่าง จะได้ไม่ทับของที่กรอกใหม่ไปแล้ว
+            if (oldStock.exists() && !newStock.exists()) payload.stock = oldStock.val();
+            if (oldHistory.exists() && !newHistory.exists()) payload.history = oldHistory.val();
+            if (Object.keys(payload).length === 0) return false;
+            payload._migratedAt = new Date().toISOString();
+            return appRootRef.update(payload).then(() => true);
+          });
+        });
+      }).catch(err => {
+        console.warn('migrate skipped:', err && err.message);
+        return false;
+      });
+    }
+
     // Start the app
-    document.addEventListener('DOMContentLoaded', initApp);
+    document.addEventListener('DOMContentLoaded', () => {
+      migrateLegacyRoot().then(moved => {
+        if (moved) showNotification('ย้ายข้อมูลเข้าห้องใหม่สำเร็จแล้ว');
+        initApp();
+      });
+    });
   </script>
 </body>
 </html>
