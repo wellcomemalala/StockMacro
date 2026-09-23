@@ -1319,5 +1319,175 @@ document.getElementById('restoreFile').addEventListener('change', function(e) {
       });
     });
   </script>
+
+<!-- ================= ระบบล็อกเข้าใช้งาน (รหัสร้าน + ชื่อพนักงาน) ================= -->
+<!-- ใช้รหัสเดียวกันกับระบบรับออเดอร์ (racing_order_app/accessCode) -->
+<!-- ใส่ครั้งเดียว จำไว้จนกว่าเจ้าของจะเปลี่ยนรหัส → ทุกเครื่องเด้งขึ้นทันที -->
+<script>
+(function () {
+  'use strict';
+  if (window.__APP_GATE__) return;
+  window.__APP_GATE__ = true;
+
+  var NEED_CODE = true;                 // false = แอปนี้มีระบบรหัสของตัวเองอยู่แล้ว
+  var APP_LABEL = 'ระบบสต็อค';
+  var DB_URL    = 'https://supertest01-55ac2-default-rtdb.asia-southeast1.firebasedatabase.app/';
+  var CODE_PATH = 'racing_order_app/accessCode';
+  var LS_CODE   = 'access_code_v1';
+  var LS_NAME   = 'staff_name';
+
+  function hashCode(s) {
+    var h = 5381;
+    for (var i = 0; i < s.length; i++) h = ((h << 5) + h) ^ s.charCodeAt(i);
+    return (h >>> 0).toString(16);
+  }
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+
+  var css = document.createElement('style');
+  css.textContent =
+    '#gateOv{display:none;position:fixed;inset:0;background:rgba(17,20,24,.92);z-index:2147483000;' +
+    'align-items:center;justify-content:center;font-family:inherit;padding:16px}' +
+    '#gateOv.on{display:flex}' +
+    '#gateBox{background:#fff;border-radius:16px;padding:28px 24px;max-width:340px;width:100%;' +
+    'box-shadow:0 12px 40px rgba(0,0,0,.4);text-align:center;box-sizing:border-box}' +
+    '#gateBox .g-ico{font-size:34px;line-height:1}' +
+    '#gateBox .g-ttl{font-size:19px;font-weight:700;color:#2c3e50;margin-top:6px}' +
+    '#gateBox .g-sub{font-size:14px;color:#7f8c8d;margin-top:6px}' +
+    '#gateBox input{width:100%;font-size:21px;padding:11px 14px;border:2px solid #4CAF50;border-radius:9px;' +
+    'text-align:center;box-sizing:border-box;margin:15px 0 4px;-webkit-appearance:none}' +
+    '#gateBox input:focus{outline:none;border-color:#2ecc71}' +
+    '#gateBox button{background:linear-gradient(135deg,#4CAF50,#2ecc71);color:#fff;border:none;' +
+    'padding:12px 20px;border-radius:9px;font-size:17px;font-weight:700;cursor:pointer;width:100%;margin-top:11px}' +
+    '#gateBox button:disabled{opacity:.5;cursor:default}' +
+    '#gateErr{color:#e74c3c;font-size:14px;min-height:20px;margin:8px 0 0;font-weight:600}' +
+    '#gateApp{font-size:12px;color:#b2bec3;margin-top:14px;letter-spacing:.3px}';
+  document.head.appendChild(css);
+
+  var ov = document.createElement('div');
+  ov.id = 'gateOv';
+  ov.innerHTML =
+    '<div id="gateBox">' +
+      '<div class="g-ico" id="gateIco">🔒</div>' +
+      '<div class="g-ttl" id="gateTtl"></div>' +
+      '<div class="g-sub" id="gateSub"></div>' +
+      '<input id="gateInp" autocomplete="off">' +
+      '<p id="gateErr"></p>' +
+      '<button id="gateBtn"></button>' +
+      '<div id="gateApp"></div>' +
+    '</div>';
+
+  function boot() {
+    document.body.appendChild(ov);
+    var inp = document.getElementById('gateInp');
+    var btn = document.getElementById('gateBtn');
+    var err = document.getElementById('gateErr');
+    document.getElementById('gateApp').textContent = APP_LABEL;
+
+    var step = null;
+
+    function show(s) {
+      step = s;
+      err.textContent = '';
+      btn.disabled = false;
+      if (s === 'code') {
+        document.getElementById('gateIco').textContent = '🔒';
+        document.getElementById('gateTtl').textContent = 'ใส่รหัสเข้าใช้งาน';
+        document.getElementById('gateSub').textContent = 'รหัสเดียวกับระบบรับออเดอร์ · ใส่แค่ครั้งแรก';
+        inp.type = 'password';
+        inp.maxLength = 12;
+        inp.placeholder = '••••••';
+        btn.textContent = '✅ เข้าใช้งาน';
+      } else {
+        document.getElementById('gateIco').textContent = '👤';
+        document.getElementById('gateTtl').textContent = 'ยินดีต้อนรับ!';
+        document.getElementById('gateSub').textContent = 'พิมพ์ชื่อของคุณเพื่อเริ่มใช้งาน';
+        inp.type = 'text';
+        inp.maxLength = 20;
+        inp.placeholder = 'ชื่อพนักงาน';
+        btn.textContent = '✅ เริ่มงาน';
+      }
+      inp.value = '';
+      ov.classList.add('on');
+      setTimeout(function () { try { inp.focus(); } catch (e) {} }, 80);
+    }
+
+    function hide() { ov.classList.remove('on'); }
+
+    function applyName(name) {
+      lsSet(LS_NAME, name);
+      window.APP_STAFF_NAME = name;
+      // ส่งต่อให้แอปที่ใช้ชื่อคนละคีย์
+      lsSet('cashier_staff', name);
+      if (typeof window.STAFF !== 'undefined') window.STAFF = name;
+      if (typeof window.currentStaffName !== 'undefined') window.currentStaffName = name;
+      try { if (typeof window.updateStaffBadge === 'function') window.updateStaffBadge(); } catch (e) {}
+      try { window.dispatchEvent(new CustomEvent('staffnamechange', { detail: name })); } catch (e) {}
+    }
+
+    function needName() {
+      var n = (lsGet(LS_NAME) || '').trim();
+      if (n) { applyName(n); hide(); return; }
+      show('name');
+    }
+
+    function submit() {
+      var v = (inp.value || '').trim();
+      if (!v) { err.textContent = step === 'code' ? '❌ กรุณาใส่รหัสก่อน' : '❌ กรุณาใส่ชื่อ'; return; }
+      if (step === 'name') { applyName(v); hide(); return; }
+      err.textContent = '';
+      btn.disabled = true;
+      fetch(DB_URL + CODE_PATH + '.json?t=' + Date.now())
+        .then(function (r) { return r.json(); })
+        .then(function (stored) {
+          btn.disabled = false;
+          var h = hashCode(v);
+          if (!stored) {                       // ยังไม่เคยตั้งรหัส → ตั้งครั้งแรก
+            if (window.firebase && firebase.apps && firebase.apps.length) {
+              firebase.database().ref(CODE_PATH).set(h);
+            }
+            lsSet(LS_CODE, h); needName(); return;
+          }
+          if (h === stored) { lsSet(LS_CODE, stored); needName(); }
+          else { err.textContent = '❌ รหัสไม่ถูกต้อง'; inp.value = ''; inp.focus(); }
+        })
+        .catch(function () {
+          btn.disabled = false;
+          err.textContent = '❌ เชื่อมต่อ Firebase ไม่ได้ ลองใหม่';
+        });
+    }
+
+    btn.onclick = submit;
+    inp.onkeydown = function (e) { if (e.key === 'Enter') submit(); };
+
+    // เปลี่ยนชื่อพนักงานได้ตลอด (เรียกจาก console หรือปุ่มในแอป)
+    window.appChangeStaffName = function () { show('name'); };
+    window.appLockNow = function () { show(NEED_CODE ? 'code' : 'name'); };
+
+    if (!NEED_CODE) { needName(); return; }
+
+    show('code');                              // ล็อกไว้ก่อนเสมอ
+    fetch(DB_URL + CODE_PATH + '.json?t=' + Date.now())
+      .then(function (r) { return r.json(); })
+      .then(function (stored) {
+        var saved = lsGet(LS_CODE);
+        if (!stored || (saved && saved === stored)) needName();
+        // เฝ้าดูการเปลี่ยนรหัส → ล็อกทุกเครื่องทันที
+        if (window.firebase && firebase.apps && firebase.apps.length) {
+          firebase.database().ref(CODE_PATH).on('value', function (snap) {
+            var cur = snap.val();
+            if (!cur) return;
+            if (lsGet(LS_CODE) !== cur) show('code');
+          });
+        }
+      })
+      .catch(function () { show('code'); });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>
+<!-- ================= จบระบบล็อกเข้าใช้งาน ================= -->
 </body>
 </html>
