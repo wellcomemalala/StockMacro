@@ -302,6 +302,59 @@ button i.fas {
 }
 
 
+
+/* ===== ประวัติ: กรอบสีเขียว/แดง ===== */
+.history-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin: 8px 0; padding: 10px 14px; border-radius: 8px;
+  border: 1px solid #ddd; border-left-width: 6px; background: #fafafa;
+}
+.history-item .hi-text { flex: 1; min-width: 0; line-height: 1.5; }
+.history-item .hi-time { color: #777; font-size: 14px; margin-right: 6px; }
+.history-item .hi-detail { color: #666; font-size: 14px; }
+.history-item .hi-badge {
+  flex-shrink: 0; min-width: 96px; text-align: center; font-weight: 700;
+  font-size: 17px; padding: 6px 10px; border-radius: 8px; white-space: nowrap;
+}
+.history-item.hi-up   { background: #e8f5e9; border-color: #66bb6a; }
+.history-item.hi-up   .hi-badge { background: #2e7d32; color: #fff; }
+.history-item.hi-new  { background: #e8f5e9; border-color: #66bb6a; }
+.history-item.hi-new  .hi-badge { background: #1b5e20; color: #fff; }
+.history-item.hi-down { background: #ffebee; border-color: #ef5350; }
+.history-item.hi-down .hi-badge { background: #c62828; color: #fff; }
+.history-item.hi-del  { background: #ffebee; border-color: #b71c1c; border-style: dashed; border-left-style: solid; }
+.history-item.hi-del  .hi-badge { background: #7f0000; color: #fff; }
+.history-item.hi-same { background: #f5f5f5; border-color: #9e9e9e; }
+.history-item.hi-same .hi-badge { background: #757575; color: #fff; }
+
+.day-summary { margin: 10px 0 14px; border: 1px solid #ddd; border-radius: 8px; background: #fff; }
+.day-summary > summary { cursor: pointer; padding: 10px 14px; font-weight: 600; background: #f2f2f2; border-radius: 8px; }
+.day-summary[open] > summary { border-radius: 8px 8px 0 0; }
+.day-summary .sum-body { padding: 10px 14px; }
+.sum-title { font-weight: 600; margin: 8px 0 6px; }
+.sum-title.out { color: #c62828; }
+.sum-title.in  { color: #2e7d32; }
+.sum-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px 0; border-bottom: 1px dashed #e5e5e5; }
+.sum-staff { font-weight: 600; min-width: 64px; }
+.chip { display: inline-block; padding: 3px 10px; border-radius: 14px; font-size: 14px; }
+.chip.out { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+.chip.in  { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+.sum-empty { color: #888; font-size: 14px; padding: 4px 0; }
+/* ===== คอลัมน์ "วันนี้" ในหน้ารายการสต๊อค ===== */
+td.today-cell { min-width: 150px; }
+.today-chip { display: block; margin: 2px 0; padding: 3px 9px; border-radius: 6px; font-size: 14px; font-weight: 600; white-space: nowrap; }
+.today-chip.out { background: #ffebee; color: #c62828; border: 1px solid #ef5350; }
+.today-chip.in  { background: #e8f5e9; color: #2e7d32; border: 1px solid #66bb6a; }
+.today-chip small { font-weight: 400; opacity: .8; margin-left: 4px; }
+.today-none { color: #aaa; font-size: 13px; }
+tr.today-down td:first-child { box-shadow: inset 6px 0 0 #c62828; }
+tr.today-up   td:first-child { box-shadow: inset 6px 0 0 #2e7d32; }
+tr.today-down td.today-cell { background: rgba(244, 67, 54, 0.08); }
+tr.today-up   td.today-cell { background: rgba(76, 175, 80, 0.10); }
+@media (max-width: 768px) {
+  .history-item { flex-direction: column; align-items: stretch; }
+  .history-item .hi-badge { width: 100%; }
+}
   </style>
 </head>
 <body>
@@ -412,9 +465,13 @@ button i.fas {
   <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.15.0/firebase-database-compat.js"></script>
   
   <script>
-  
-  
-  
+  // ป้องกัน HTML/สคริปต์แทรก และชื่อสินค้าที่มีเครื่องหมาย ' " < >
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
   // เพิ่มฟังก์ชันนี้ในส่วน script
 window.backupData = function() {
   stockRef.once('value').then((snapshot) => {
@@ -443,6 +500,10 @@ window.backupData = function() {
   // เพิ่มฟังก์ชันนี้ก่อนส่วน Firebase configuration
 window.exportToImage = function() {
   const stockTable = document.querySelector('#stockList table');
+  if (!stockTable) {
+    showNotification('ไม่มีตารางให้ส่งออก', 'error');
+    return;
+  }
 
   html2canvas(stockTable, {
     scrollY: -window.scrollY, // จัดการการสกรอล
@@ -452,7 +513,7 @@ window.exportToImage = function() {
     windowHeight: stockTable.scrollHeight
   }).then(canvas => {
     const link = document.createElement('a');
-    link.download = 'stock-report-' + new Date().toISOString() + '.png';
+    link.download = 'stock-report-' + new Date().toISOString().replace(/[:.]/g, '-') + '.png';
     link.href = canvas.toDataURL('image/png');
     link.click();
     showNotification('ส่งออกรูปภาพสำเร็จ');
@@ -604,6 +665,12 @@ window.exportToImage = function() {
     staffButtonsDiv.appendChild(button);
   });
   
+  // เลือกชื่อพนักงานที่ล็อกอินไว้ให้อัตโนมัติ (ถ้ามีในรายชื่อ)
+  if (window.APP_STAFF_NAME) {
+    const pre = Array.from(staffButtonsDiv.querySelectorAll('button')).find(b => b.textContent === window.APP_STAFF_NAME);
+    if (pre) pre.click();
+  }
+
   // สร้างปุ่มยืนยันและยกเลิก
   const buttonGroup = document.createElement('div');
   buttonGroup.style.display = 'flex';
@@ -627,51 +694,62 @@ window.exportToImage = function() {
       return;
     }
     
-    // คำนวณจำนวนใหม่
-    let newQty;
-    if (isIncrement) {
-      newQty = currentQty + selectedQuantity;
-    } else {
-      newQty = currentQty - selectedQuantity;
-      if (newQty < 0) newQty = 0; // ป้องกันจำนวนติดลบ
-    }
-    
+    const amount = Math.max(1, parseInt(selectedQuantity) || 1);
+    const staff = selectedStaff;
+
     // ลบ modal
     document.body.removeChild(quantityModal);
-    
-    // ดำเนินการอัพเดทข้อมูล
+
+    // ใช้ transaction: คำนวณจากจำนวนล่าสุดในฐานข้อมูล (กันกรณีสองเครื่องกดพร้อมกัน/ข้อมูลในหน้าจอเก่า)
     const itemRef = stockItemRef(itemId);
+    let before = null, after = null, itemInfo = null;
 
-    itemRef.once('value', (snapshot) => {
-      const item = snapshot.val();
-      if (!item) return;
-
-      const oldQty = item.quantity;
-      const updatedData = {
-        quantity: newQty,
+    itemRef.transaction((cur) => {
+      if (cur === null) return cur;
+      const base = Number(cur.quantity) || 0;
+      before = base;
+      after = isIncrement ? base + amount : Math.max(0, base - amount);
+      itemInfo = cur;
+      return Object.assign({}, cur, {
+        quantity: after,
         lastUpdated: new Date().toISOString(),
-        updatedBy: selectedStaff
-      };
-
-      itemRef.update(updatedData).then(() => {
-        // เพิ่มประวัติ
-        historyRef.push({
-          type: 'update',
-          itemName: item.name,
-          oldQuantity: oldQty,
-          newQuantity: newQty,
-          unit: item.unit,
-          updatedBy: selectedStaff,
-          timestamp: new Date().toISOString(),
-          date: new Date().toLocaleDateString('th-TH')
-        });
-
-        document.getElementById(`qty-${itemId}`).textContent = newQty;
-        showNotification("อัปเดทจำนวนสำเร็จ");
-      }).catch((error) => {
-        showNotification("เกิดข้อผิดพลาด: " + error.message, "error");
+        updatedBy: staff
       });
-    });
+    }, (error, committed) => {
+      if (error) {
+        showNotification("เกิดข้อผิดพลาด: " + error.message, "error");
+        return;
+      }
+      if (!committed || !itemInfo) {
+        showNotification("ไม่พบสินค้านี้แล้ว (อาจถูกลบไปแล้ว)", "error");
+        return;
+      }
+      const delta = after - before;
+      if (delta === 0) {
+        showNotification("จำนวนเป็น 0 อยู่แล้ว ลดต่อไม่ได้", "error");
+        return;
+      }
+
+      // เพิ่มประวัติ (บันทึกจำนวนที่เปลี่ยนจริง)
+      const nowIso = new Date().toISOString();
+      historyRef.push({
+        type: 'update',
+        itemName: itemInfo.name,
+        oldQuantity: before,
+        newQuantity: after,
+        change: delta,
+        unit: itemInfo.unit,
+        updatedBy: staff,
+        timestamp: nowIso,
+        date: new Date().toLocaleDateString('th-TH')
+      });
+
+      if (!isIncrement && amount > before) {
+        showNotification("ในสต๊อคมีแค่ " + before + " จึงลดได้เท่าที่มี", "error");
+      } else {
+        showNotification("อัปเดทจำนวนสำเร็จ");
+      }
+    }, false);
   });
   
   // ปุ่มยกเลิก
@@ -804,6 +882,10 @@ const firebaseConfig = {
         // Get old data for history
         stockItemRef(editItemId.value).once('value', (snapshot) => {
           const oldItem = snapshot.val();
+          if (!oldItem) {
+            showNotification('ไม่พบสินค้านี้แล้ว (อาจถูกลบไปแล้ว)', 'error');
+            return;
+          }
           
           // Update existing item
           stockItemRef(editItemId.value).update(itemData)
@@ -814,6 +896,7 @@ const firebaseConfig = {
                 itemName: itemName,
                 oldQuantity: oldItem.quantity,
                 newQuantity: itemQuantity,
+                change: itemQuantity - (Number(oldItem.quantity) || 0),
                 unit: itemUnit,
                 updatedBy: staffName,
                 timestamp: timestamp,
@@ -884,15 +967,49 @@ const firebaseConfig = {
     });
 
     // Load stock items
+    // ---- ความเคลื่อนไหวของ "วันนี้" (รีเซ็ตอัตโนมัติเมื่อข้ามวัน) ----
+    let stockCache = null;      // ข้อมูลสต๊อคล่าสุด
+    let historyCache = [];      // ประวัติทั้งหมดล่าสุด
+    let todayMap = {};          // ชื่อสินค้า -> รายการเปลี่ยนแปลงของวันนี้
+    let lastDayKey = new Date().toDateString();
+
+    function rebuildTodayMap() {
+      const todayKey = new Date().toDateString();
+      lastDayKey = todayKey;
+      const map = {};
+      historyCache.forEach(h => {
+        if (!h.timestamp || new Date(h.timestamp).toDateString() !== todayKey) return;
+        const c = getChange(h);
+        if (c.kind === 'del' || c.delta === 0) return;
+        const name = h.itemName;
+        (map[name] = map[name] || []).push({
+          who: getActor(h), delta: c.delta, ts: new Date(h.timestamp).getTime(), unit: h.unit || ''
+        });
+      });
+      Object.values(map).forEach(arr => arr.sort((a, b) => b.ts - a.ts)); // ล่าสุดอยู่บน
+      todayMap = map;
+    }
+
+    // ข้ามเที่ยงคืนแล้วสถานะวันนี้กลับเป็นปกติเอง
+    setInterval(() => {
+      if (new Date().toDateString() !== lastDayKey) { rebuildTodayMap(); renderStock(); }
+    }, 30000);
+
     function loadStockItems() {
       stockRef.on('value', (snapshot) => {
+        stockCache = snapshot.exists() ? snapshot.val() : null;
+        renderStock();
+      });
+    }
+
+    function renderStock() {
         const stockList = document.getElementById('stockList');
-        if (!snapshot.exists()) {
+        if (!stockCache) {
           stockList.innerHTML = '<p>ไม่พบรายการสินค้าในสต๊อค</p>';
           return;
         }
         
-        const items = snapshot.val();
+        const items = stockCache;
         let tableHTML = `
           <table>
             <thead>
@@ -902,6 +1019,7 @@ const firebaseConfig = {
                 <th>จำนวน</th>
                 <th>หน่วย</th>
                 <th>สถานะ</th>
+                <th>วันนี้ (ใครเอา/เติม)</th>
                 <th>อัพเดทล่าสุด</th>
                 <th>อัพเดทโดย</th>
                 <th>จัดการ</th>
@@ -937,25 +1055,38 @@ for (const key in items) {
   
   const updatedBy = item.updatedBy || '-';
   
+  // สรุปความเคลื่อนไหววันนี้ของสินค้านี้
+  const todayList = todayMap[item.name] || [];
+  const net = todayList.reduce((s, e) => s + e.delta, 0);
+  const todayCls = todayList.length ? (net < 0 ? ' today-down' : net > 0 ? ' today-up' : '') : '';
+  const todayHTML = todayList.length
+    ? todayList.map(e => {
+        const t = new Date(e.ts).toLocaleTimeString('th-TH', {hour: '2-digit', minute: '2-digit'});
+        const out = e.delta < 0;
+        return `<span class="today-chip ${out ? 'out' : 'in'}">${out ? '▼' : '▲'} ${esc(e.who)} ${out ? '−' : '+'}${Math.abs(e.delta)} ${esc(e.unit)}<small>${t}</small></span>`;
+      }).join('')
+    : '<span class="today-none">—</span>';
+
   tableHTML += `
-    <tr class="${rowClass}">
+    <tr class="${rowClass}${todayCls}">
       <td>${index}</td>
-      <td>${item.name}</td>
+      <td>${esc(item.name)}</td>
       <td>
-        <button onclick="updateQuantity('${key}', ${item.quantity}, false)">-</button>
-        <span id="qty-${key}">${item.quantity}</span>
-        <button onclick="updateQuantity('${key}', ${item.quantity}, true)">+</button>
+        <button onclick="updateQuantity('${key}', ${Number(item.quantity) || 0}, false)">-</button>
+        <span id="qty-${key}">${esc(item.quantity)}</span>
+        <button onclick="updateQuantity('${key}', ${Number(item.quantity) || 0}, true)">+</button>
       </td>
-      <td>${item.unit}</td>
+      <td>${esc(item.unit)}</td>
       <td>${status}</td>
+      <td class="today-cell">${todayHTML}</td>
       <td>${formattedDate}</td>
-      <td>${updatedBy}</td>
+      <td>${esc(updatedBy)}</td>
       <td>
         <div class="button-group">
           <button class="edit" onclick="editItem('${key}')">
             <i class="fas fa-edit"></i> แก้ไข
           </button>
-          <button class="delete" onclick="deleteItem('${key}', '${item.name}')">
+          <button class="delete" onclick="deleteItem('${key}')">
             <i class="fas fa-trash"></i> ลบ
           </button>
         </div>
@@ -971,13 +1102,117 @@ for (const key in items) {
         `;
         
         stockList.innerHTML = tableHTML;
+        applySearch(); // คงผลค้นหาไว้เมื่อข้อมูลอัพเดทแบบเรียลไทม์
+    }
+
+    // ---- ประวัติ: คำนวณการเพิ่ม/ลด (ใช้ได้กับข้อมูลเก่าด้วย) ----
+    function getChange(h) {
+      if (h.type === 'add') return { kind: 'new', delta: Number(h.quantity) || 0 };
+      if (h.type === 'delete') return { kind: 'del', delta: -(Number(h.quantity) || 0) };
+      if (h.type === 'update') {
+        const d = (Number(h.newQuantity) || 0) - (Number(h.oldQuantity) || 0);
+        return { kind: d > 0 ? 'up' : d < 0 ? 'down' : 'same', delta: d };
+      }
+      return { kind: 'same', delta: 0 };
+    }
+    function getActor(h) { return h.updatedBy || h.addedBy || h.deletedBy || '-'; }
+
+    function buildHistoryItem(h) {
+      const time = new Date(h.timestamp).toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
+      const c = getChange(h);
+      const who = esc(getActor(h));
+      const name = esc(h.itemName);
+      const unit = esc(h.unit || '');
+      const abs = Math.abs(c.delta);
+      let text, detail = '', badge, cls;
+
+      if (c.kind === 'new') {
+        cls = 'hi-new';
+        text = `<strong>${who}</strong> เพิ่มสินค้าใหม่ <strong>${name}</strong>`;
+        detail = `เริ่มต้น ${esc(h.quantity)} ${unit}`;
+        badge = `🆕 +${abs} ${unit}`;
+      } else if (c.kind === 'del') {
+        cls = 'hi-del';
+        text = `<strong>${who}</strong> ลบสินค้า <strong>${name}</strong>`;
+        detail = `ตอนลบเหลือ ${esc(h.quantity)} ${unit}`;
+        badge = `🗑 ลบรายการ`;
+      } else if (c.kind === 'up') {
+        cls = 'hi-up';
+        text = `<strong>${who}</strong> เพิ่ม <strong>${name}</strong>`;
+        detail = `จาก ${esc(h.oldQuantity)} เป็น ${esc(h.newQuantity)} ${unit}`;
+        badge = `▲ เพิ่ม +${abs} ${unit}`;
+      } else if (c.kind === 'down') {
+        cls = 'hi-down';
+        text = `<strong>${who}</strong> เอาออก <strong>${name}</strong>`;
+        detail = `จาก ${esc(h.oldQuantity)} เป็น ${esc(h.newQuantity)} ${unit}`;
+        badge = `▼ ลด −${abs} ${unit}`;
+      } else {
+        cls = 'hi-same';
+        text = `<strong>${who}</strong> แก้ไขข้อมูล <strong>${name}</strong>`;
+        detail = `จำนวนเท่าเดิม ${esc(h.newQuantity != null ? h.newQuantity : h.oldQuantity)} ${unit}`;
+        badge = `● ไม่เปลี่ยน`;
+      }
+
+      return `
+        <div class="history-item ${cls}">
+          <div class="hi-text">
+            <div><span class="hi-time">${time}</span>${text}</div>
+            <div class="hi-detail">${detail}</div>
+          </div>
+          <div class="hi-badge">${badge}</div>
+        </div>`;
+    }
+
+    // สรุปประจำวัน: ใครเอาอะไรออกไปเท่าไหร่ / ใครเติมอะไรเท่าไหร่
+    function buildDaySummary(list, open) {
+      const out = {}, inn = {};
+      let outCount = 0, inCount = 0;
+      const add = (bucket, staff, item, unit, n) => {
+        if (!bucket[staff]) bucket[staff] = {};
+        const k = item + '||' + unit;
+        bucket[staff][k] = (bucket[staff][k] || { item, unit, qty: 0 });
+        bucket[staff][k].qty += n;
+      };
+      list.forEach(h => {
+        const c = getChange(h);
+        const staff = getActor(h);
+        if (c.kind === 'down') { add(out, staff, h.itemName, h.unit || '', Math.abs(c.delta)); outCount += Math.abs(c.delta); }
+        else if (c.kind === 'up' || c.kind === 'new') { add(inn, staff, h.itemName, h.unit || '', Math.abs(c.delta)); inCount += Math.abs(c.delta); }
       });
+
+      const render = (bucket, cls) => {
+        const staffs = Object.keys(bucket);
+        if (!staffs.length) return `<div class="sum-empty">— ไม่มี —</div>`;
+        return staffs.map(s => {
+          const chips = Object.values(bucket[s]).map(o =>
+            `<span class="chip ${cls}">${esc(o.item)} ${cls === 'out' ? '−' : '+'}${o.qty} ${esc(o.unit)}</span>`).join('');
+          return `<div class="sum-row"><span class="sum-staff">${esc(s)}</span>${chips}</div>`;
+        }).join('');
+      };
+
+      return `
+        <details class="day-summary"${open ? ' open' : ''}>
+          <summary>📊 สรุปประจำวัน — 🔴 เอาออก ${outCount} ชิ้น · 🟢 เพิ่มเข้า ${inCount} ชิ้น</summary>
+          <div class="sum-body">
+            <div class="sum-title out">🔴 เอาออกไป (ใครเอาอะไรไปเท่าไหร่)</div>
+            ${render(out, 'out')}
+            <div class="sum-title in">🟢 เพิ่มเข้า</div>
+            ${render(inn, 'in')}
+          </div>
+        </details>`;
     }
 
     // Load history items
     function loadHistoryItems() {
       historyRef.orderByChild('timestamp').on('value', (snapshot) => {
         const historyList = document.getElementById('historyList');
+
+        // อัพเดทสถานะ "วันนี้" ในหน้ารายการสต๊อค
+        historyCache = [];
+        snapshot.forEach(cs => { historyCache.push(cs.val()); });
+        rebuildTodayMap();
+        renderStock();
+
         if (!snapshot.exists()) {
           historyList.innerHTML = '<p>ไม่พบประวัติการอัพเดท</p>';
           return;
@@ -1005,32 +1240,15 @@ for (const key in items) {
         });
         
         let historyHTML = '';
+        let firstDay = true;
         
         for (const date in groupedByDate) {
-          historyHTML += `<div class="history-date">${date}</div>`;
+          historyHTML += `<div class="history-date">${esc(date)}</div>`;
+          historyHTML += buildDaySummary(groupedByDate[date], firstDay);
+          firstDay = false;
           
           groupedByDate[date].forEach(history => {
-            const time = new Date(history.timestamp).toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
-            
-            if (history.type === 'add') {
-              historyHTML += `
-                <div class="history-item">
-                  <p>${time} - <strong>${history.addedBy}</strong> เพิ่มสินค้า <strong>${history.itemName}</strong> จำนวน ${history.quantity} ${history.unit}</p>
-                </div>
-              `;
-            } else if (history.type === 'update') {
-              historyHTML += `
-                <div class="history-item">
-                  <p>${time} - <strong>${history.updatedBy}</strong> อัพเดทสินค้า <strong>${history.itemName}</strong> จาก ${history.oldQuantity} ${history.unit} เป็น ${history.newQuantity} ${history.unit}</p>
-                </div>
-              `;
-            } else if (history.type === 'delete') {
-              historyHTML += `
-                <div class="history-item">
-                  <p>${time} - <strong>${history.deletedBy}</strong> ลบสินค้า <strong>${history.itemName}</strong> จำนวน ${history.quantity} ${history.unit}</p>
-                </div>
-              `;
-            }
+            historyHTML += buildHistoryItem(history);
           });
         }
         
@@ -1039,19 +1257,17 @@ for (const key in items) {
     }
 
     // Search functionality
-    document.getElementById('searchInput').addEventListener('keyup', function() {
-      const searchValue = this.value.toLowerCase();
+    function applySearch() {
+      const input = document.getElementById('searchInput');
+      const searchValue = (input ? input.value : '').toLowerCase();
       const rows = document.querySelectorAll('#stockList table tbody tr');
-      
       rows.forEach(row => {
-        const itemName = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-        if (itemName.includes(searchValue)) {
-          row.style.display = '';
-        } else {
-          row.style.display = 'none';
-        }
+        const cell = row.querySelector('td:nth-child(2)');
+        const itemName = cell ? cell.textContent.toLowerCase() : '';
+        row.style.display = itemName.includes(searchValue) ? '' : 'none';
       });
-    });
+    }
+    document.getElementById('searchInput').addEventListener('input', applySearch);
 
     // Edit item
     window.editItem = function(itemId) {
@@ -1076,43 +1292,39 @@ for (const key in items) {
     };
 
     // Delete item
-    window.deleteItem = function(itemId, itemName) {
-      if (confirm(`ต้องการลบ "${itemName}" ออกจากสต๊อคใช่หรือไม่?`)) {
-        // Get staff name first
-        const staffName = prompt("กรุณาใส่ชื่อพนักงานที่ลบสินค้านี้:");
-        
+    window.deleteItem = function(itemId) {
+      stockItemRef(itemId).once('value', (snapshot) => {
+        const item = snapshot.val();
+        if (!item) {
+          showNotification('ไม่พบสินค้านี้แล้ว', 'error');
+          return;
+        }
+        if (!confirm(`ต้องการลบ "${item.name}" ออกจากสต๊อคใช่หรือไม่?`)) return;
+
+        const staffName = (prompt("กรุณาใส่ชื่อพนักงานที่ลบสินค้านี้:", window.APP_STAFF_NAME || '') || '').trim();
         if (!staffName) {
           showNotification("กรุณาระบุชื่อพนักงาน", "error");
           return;
         }
-        
-        // Get item data for history
-        stockItemRef(itemId).once('value', (snapshot) => {
-          const item = snapshot.val();
-          
-          stockItemRef(itemId).remove()
-            .then(() => {
-              // Add to history
-              const historyData = {
-                type: 'delete',
-                itemName: itemName,
-                quantity: item.quantity,
-                unit: item.unit,
-                deletedBy: staffName,
-                timestamp: new Date().toISOString(),
-                date: new Date().toLocaleDateString('th-TH')
-              };
-              
-              historyRef.push(historyData);
-              
-              showNotification(`ลบ "${itemName}" สำเร็จ`);
-            })
-            .catch(error => {
-              console.error('Error deleting item:', error);
-              showNotification('เกิดข้อผิดพลาด: ' + error.message, 'error');
+
+        stockItemRef(itemId).remove()
+          .then(() => {
+            historyRef.push({
+              type: 'delete',
+              itemName: item.name,
+              quantity: item.quantity,
+              unit: item.unit,
+              deletedBy: staffName,
+              timestamp: new Date().toISOString(),
+              date: new Date().toLocaleDateString('th-TH')
             });
-        });
-      }
+            showNotification(`ลบ "${item.name}" สำเร็จ`);
+          })
+          .catch(error => {
+            console.error('Error deleting item:', error);
+            showNotification('เกิดข้อผิดพลาด: ' + error.message, 'error');
+          });
+      });
     };
 
     // Delete history functionality
@@ -1227,7 +1439,6 @@ document.getElementById('restoreFile').addEventListener('change', function(e) {
       // (เดิม remove() ก่อนแล้วค่อยเขียนจาก root → ถ้าเน็ตหลุดกลางคัน ข้อมูลหายเกลี้ยง)
       stockRef.set(data).then(() => {
         showNotification('กู้คืนข้อมูลสำเร็จ (' + n + ' รายการ)');
-        loadStockItems();
       }).catch((error) => {
         showNotification('กู้คืนไม่สำเร็จ — ข้อมูลเดิมยังอยู่ครบ: ' + error.message, 'error');
         console.error('Restore error:', error);
@@ -1248,7 +1459,11 @@ document.getElementById('restoreFile').addEventListener('change', function(e) {
       loadHistoryItems();
       
       // Add default items if stock is empty
-      stockRef.once('value', (snapshot) => {
+      // ใช้ธง _seeded แบบ atomic: ใส่ค่าเริ่มต้นได้ครั้งเดียวในชีวิต
+      // (กันสินค้าเริ่มต้นกลับมาเองหลังลบหมด และกันซ้ำเมื่อเปิดสองเครื่องพร้อมกัน)
+      appRootRef.child('_seeded').transaction((cur) => cur ? undefined : true, (err, committed) => {
+        if (err || !committed) return;
+        stockRef.once('value', (snapshot) => {
         if (!snapshot.exists()) {
           const defaultItems = [
             {name: 'ชูรส พลัส', quantity: 1, unit: 'ห่อ', minQuantity: 3, lastUpdated: new Date().toISOString(), updatedBy: 'ระบบ'},
@@ -1279,6 +1494,7 @@ document.getElementById('restoreFile').addEventListener('change', function(e) {
             stockRef.push(item);
           });
         }
+        });
       });
     }
 
