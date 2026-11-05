@@ -583,19 +583,42 @@ window.exportToImage = function() {
     return;
   }
 
-  html2canvas(stockTable, {
-    scrollY: -window.scrollY, // จัดการการสกรอล
+  // สร้างสำเนาตารางไว้นอกจอ ขนาดกว้างแบบโน้ตบุ๊ค
+  // (อยู่นอก #stockList จึงไม่โดนสไตล์ "การ์ดมือถือ" ทำให้รูปออกมาเป็นตารางเหมือนโน้ตบุ๊คเสมอ)
+  const EXPORT_WIDTH = 1150;
+  const wrapper = document.createElement('div');
+  wrapper.id = 'exportArea';
+  wrapper.style.cssText = 'position:absolute; left:-99999px; top:0; width:' + EXPORT_WIDTH + 'px; background:#fff; padding:10px;';
+  wrapper.innerHTML =
+    '<style>' +
+    '#exportArea table{width:100%;margin-top:0;border-collapse:collapse;}' +
+    '#exportArea th,#exportArea td{padding:12px;font-size:16px;}' +
+    '#exportArea .button-group{flex-direction:row;}' +
+    '#exportArea .status-low,#exportArea .status-warning,#exportArea .status-normal{font-size:16px;}' +
+    '</style>';
+  wrapper.appendChild(stockTable.cloneNode(true));
+  document.body.appendChild(wrapper);
+
+  html2canvas(wrapper, {
     allowTaint: true,
     useCORS: true,
-    logging: true,
-    windowHeight: stockTable.scrollHeight
+    logging: false,
+    backgroundColor: '#ffffff',
+    scale: 2,                        // ความคมชัดเท่ากันทั้งมือถือและโน้ตบุ๊ค
+    windowWidth: 1300,               // ให้ media query ทำงานแบบหน้าจอโน้ตบุ๊ค
+    width: wrapper.offsetWidth,
+    height: wrapper.offsetHeight,
+    scrollX: 0,
+    scrollY: 0
   }).then(canvas => {
+    wrapper.remove();
     const link = document.createElement('a');
     link.download = 'stock-report-' + new Date().toISOString().replace(/[:.]/g, '-') + '.png';
     link.href = canvas.toDataURL('image/png');
     link.click();
     showNotification('ส่งออกรูปภาพสำเร็จ');
   }).catch(error => {
+    wrapper.remove();
     console.error('Error exporting:', error);
     showNotification('ส่งออกรูปภาพไม่สำเร็จ', 'error');
   });
